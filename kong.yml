@@ -1,0 +1,106 @@
+_format_version: "2.1"
+
+services:
+  - name: auth
+    url: http://192.168.1.15:7500
+  - name: merchants
+    url: http://192.168.1.15:9966
+  - name: wallets
+    url: http://192.168.1.15:3333
+  - name: transactions
+    url: http://192.168.1.15:7766
+  - name: auth-merchant
+    url: http://192.168.1.15:7600
+    routes:
+      - paths:
+          - /auth-merchant/api
+
+routes:
+  - name: auth
+    service: auth
+    preserve_host: true
+    strip_path: false
+    paths:
+      - /auth/signup
+      - /auth/signin
+      - /auth/edituser
+      - /auth/password
+      - /auth/logout
+      - /auth/refreshtoken
+      - /auth/validate-access
+      - /user/all
+      - /user/get-by-role/*
+      - /roles
+      - /roles/*
+      - /roles/assign-role-to-user
+      - /roles/create-role
+      - /roles/revoke-role-from-user
+  - name: transactions
+    service: transactions
+    preserve_host: true
+    strip_path: false
+    paths:
+      - /transactions/init
+      - /transactions/get-by-id/*
+  - name: wallets
+    service: wallets
+    preserve_host: true
+    strip_path: false
+    paths:
+      - /unique-wallets/create
+      - /unique-wallets/get-by-id
+
+  # Protected Route
+  - name: transactions-protected
+    paths:
+      - /transactions/get-all
+    service: transactions
+    preserve_host: true
+    strip_path: false
+    plugins:
+      - name: kong-keyless
+        config:
+          authurl: http://192.168.1.15:8000/auth/validate-access
+  - name: merchants-protected
+    paths:
+      - /merchants/get-list
+      - /merchants/get-item/*
+      - /merchants/add
+      - /merchants/edit
+      - /merchants/delete
+    service: merchants
+    preserve_host: true
+    strip_path: false
+    plugins:
+      - name: kong-keyless
+        config:
+          authurl: http://192.168.1.15:8000/auth/validate-access
+  - name: wallets-protected
+    paths:
+      - /unique-wallets/get-all
+    service: wallets
+    preserve_host: true
+    strip_path: false
+    plugins:
+      - name: kong-keyless
+        config:
+          authurl: http://192.168.1.15:8000/auth/validate-access
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+      headers:
+        - Authorization
+        - Content-Type
+        - X-Custom-Header
+        - Access-Control-Allow-Origin
+      credentials: true
+      preflight_continue: false

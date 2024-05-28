@@ -1,0 +1,20 @@
+`Flow Custom plugin kong using go languange`
+
+1. Client request to server for example path /get-user/get-all with Access token in header Authorization
+2. Server or API gateway in this flow will find the matching route for /get-user/get-all
+3. Kong will check if the path is required an authorization, if yes then the custom plugin will send the payload to path /auth/api/validate-access in service auth
+4. With headers access token and payload body of path
+5. The service auth will check is the token that client provided valid or not, example of error is token expired or invalid token
+6. If the token is valid and the path of resource is provided in payload body
+7. The service will check is the path that requested by client is provided in resource, if not service will return with message: 'there is no path with client requested'
+8. But if the path is exist in resource the service will hit api keycloak evaluate to check the client is permited or not to access this path of resources
+9. From this the keycloak just need id from user and resource to check is user permitted or not, the status of response just 'Permit' or 'Deny'
+10. If keycloak response with deny status, the service will tell kong that the user can't access this resource with forbidden status
+11. but if keycloak response with permit status, kong will continue to request to service that client asked in this example is user service
+
+To Do
+
+[] Dynamic message from auth service, because the custom plugin still response with hardcoded message in error response
+[] Check in kong.yml for path in each service using plugin is that a best configuration for db-less and declarative configuration
+[] Unit testing in auth service for api /validate-access
+[] Testing plugin in go to ensure the plugin running correctly as we wanted
